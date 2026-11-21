@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="io.github.marketlite">
+    <uses-permission android:name="android.permission.INTERNET" />
     <queries><package android:name="com.xiaomi.market" /><package android:name="com.miui.hybrid" /><package android:name="org.matrix.vector.manager" /><package android:name="me.weishu.kernelsu" /></queries>
     <application android:label="商店轻享" android:icon="@drawable/ic_launcher" android:allowBackup="false" android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity android:name=".MainActivity" android:exported="true">

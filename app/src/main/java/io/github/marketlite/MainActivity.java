@@ -19,13 +19,13 @@ public final class MainActivity extends Activity {
     private LinearLayout content;
     private SharedPreferences prefs,permissions;
     private static final String VECTOR="org.matrix.vector.manager",KERNELSU="me.weishu.kernelsu";
-    private static final String PROJECT_URL="https://github.com/w999w/MarketLite";
+    private static final String PROJECT_URL=GithubUpdates.PROJECT;
     private final java.util.List<LinearLayout> moduleCards=new java.util.ArrayList<>();
     private TextView vectorStatus,rootStatus,moduleNotice,rootNotice;
     private LinearLayout rootActions;
     private long installedAt,lastRootCheck;
     private int rootState=-1;
-    private boolean probingRoot;
+    private boolean probingRoot,checkingUpdate;
     private final SharedPreferences.OnSharedPreferenceChangeListener permissionChanges=(p,k)->{if(ConfigProvider.MARKET_SEEN.equals(k))runOnUiThread(this::refreshPermissions);};
     private TextView quickStatus;
     private PopupWindow locationPopup;
@@ -48,7 +48,7 @@ public final class MainActivity extends Activity {
         if(permissions==null)return;boolean connected=moduleReady();boolean manager=installed(VECTOR),kernel=installed(KERNELSU);
         if(vectorStatus!=null){vectorStatus.setText(!manager?"未检测到 Vector 管理器":connected?"已验证 · 商店模块最近连接成功":"尚未验证 · 启用模块及建议作用域后打开商店");vectorStatus.setTextColor(connected?ACCENT:MUTED);}
         if(rootStatus!=null){rootStatus.setText(probingRoot?"正在检查 Root…":rootState==1?"已验证 · Root 权限正常":rootState==0?"未获 Root 授权或检查失败":!kernel?"未检测到 KernelSU · Root 未验证":"尚未验证 · 请检查 Root 权限");rootStatus.setTextColor(rootState==1?ACCENT:MUTED);}
-        if(moduleNotice!=null){boolean paused=prefs.getBoolean(ConfigProvider.PAUSED,false);moduleNotice.setText(!manager?"缺少 Vector：配置暂不可用。":!connected?"尚未验证商店模块连接，配置暂不可用。请到首页检查。":"界面修改已暂停。设置仍会保存，恢复后生效。");moduleNotice.setVisibility(connected&&!paused?View.GONE:View.VISIBLE);}
+        if(moduleNotice!=null){moduleNotice.setText(!manager?"缺少 Vector：配置暂不可用。":"尚未验证商店模块连接，配置暂不可用。请到首页检查。");moduleNotice.setVisibility(connected?View.GONE:View.VISIBLE);}
         for(LinearLayout card:moduleCards)gate(card,connected);
         if(rootNotice!=null){rootNotice.setText(rootState==0?"Root 未授权：请在首页检查。":"Root 未验证：请在首页检查。");rootNotice.setVisibility(rootState==1?View.GONE:View.VISIBLE);}
         gate(rootActions,rootState==1&&!probingRoot);
@@ -193,6 +193,24 @@ public final class MainActivity extends Activity {
     }
     private void commandText(LinearLayout c,String value){TextView command=text(value,13,INK,false);command.setTypeface(Typeface.MONOSPACE);command.setTextIsSelectable(true);command.setPadding(dp(10),dp(10),dp(10),dp(10));command.setBackground(round(0xffedf5f3,8));c.addView(command,new LinearLayout.LayoutParams(-1,-2));}
     private String appVersion(){try{return getPackageManager().getPackageInfo(getPackageName(),0).versionName;}catch(Exception e){return "unknown";}}
+    private void checkUpdates(){
+        if(checkingUpdate)return;checkingUpdate=true;
+        Toast.makeText(this,"正在检查 GitHub Releases…",Toast.LENGTH_SHORT).show();
+        new Thread(()->{
+            try{
+                GithubUpdates.Release release=GithubUpdates.latest();String current=appVersion();
+                runOnUiThread(()->{
+                    checkingUpdate=false;if(isFinishing()||isDestroyed())return;
+                    if(release==null){new android.app.AlertDialog.Builder(this).setTitle("检查更新").setMessage("未找到已发布的安装包。").setPositiveButton("查看 Releases",(d,w)->openUrl(GithubUpdates.RELEASES)).setNegativeButton("关闭",null).show();return;}
+                    boolean newer=ReleaseVersion.valid(current)&&ReleaseVersion.compare(release.tag,current)>0;
+                    String notes=release.notes.length()>2000?release.notes.substring(0,2000)+"…":release.notes;
+                    android.app.AlertDialog.Builder dialog=new android.app.AlertDialog.Builder(this).setTitle(newer?"发现新版本":"当前无可用更新").setMessage("当前："+current+"\n发布："+release.tag+(newer&&!notes.isEmpty()?"\n\n"+notes:""));
+                    if(newer)dialog.setPositiveButton("下载 APK",(d,w)->openUrl(release.apk)).setNeutralButton("发布详情",(d,w)->openUrl(release.page));else dialog.setPositiveButton("查看 Releases",(d,w)->openUrl(GithubUpdates.RELEASES));
+                    dialog.setNegativeButton("关闭",null).show();
+                });
+            }catch(Exception e){runOnUiThread(()->{checkingUpdate=false;if(!isFinishing()&&!isDestroyed())AppErrors.show(this,"检查 GitHub 更新",e,e instanceof java.io.IOException&&e.getMessage()!=null&&e.getMessage().matches("GitHub HTTP \\d{3}")?e.getMessage():"请检查网络后重试，也可在关于页打开 Releases。");});}
+        },"marketlite-release-check").start();
+    }
     private void show(int page){
         if(locationPopup!=null)locationPopup.dismiss();
         quickStatus=null;vectorStatus=rootStatus=moduleNotice=rootNotice=null;rootActions=null;moduleCards.clear();
@@ -203,10 +221,10 @@ public final class MainActivity extends Activity {
         if(page==0){
             LinearLayout c=card();c.setBackground(round(0xffe1f2ee,20));hero(c,"更清爽的商店","MarketLite · "+appVersion());
             int count=0;for(int i:new int[]{0,1,2,3,6,7,10})if(prefs.getBoolean(ConfigProvider.KEYS[i],ConfigProvider.defaultValue(ConfigProvider.KEYS[i])))count++;
-            boolean paused=prefs.getBoolean(ConfigProvider.PAUSED,false);TextView summary=text(paused?"界面修改已暂停 · 配置已保留":"已开启 "+count+" 项广告去除设置",16,ACCENT,true);summary.setPadding(0,dp(18),0,dp(4));c.addView(summary);
+            TextView summary=text("已开启 "+count+" 项广告去除设置",16,ACCENT,true);summary.setPadding(0,dp(18),0,dp(4));c.addView(summary);
             c.addView(text("配置保存后自动刷新 · 部分内容需重新进入页面",13,MUTED,false));
             action(c,"打开应用商店",true,this::openMarket);action(c,"前往配置",false,()->show(1));
-            action(c,paused?"恢复已保存的界面配置":"暂停全部界面修改",false,()->{prefs.edit().putBoolean(ConfigProvider.PAUSED,!paused).apply();show(0);});
+            action(c,"检查更新",false,this::checkUpdates);
             heading("权限检查");c=card();functionHeader(c,"Vector · 必需",null);vectorStatus=text("正在检查模块连接…",14,MUTED,false);c.addView(vectorStatus);action(c,"打开 Vector 授权模块",false,()->openManager(VECTOR));action(c,"验证模块连接（打开商店）",false,()->{permissions.edit().remove(ConfigProvider.MARKET_SEEN).apply();openMarket();});
             functionHeader(c,"KernelSU · 系统工具需要",null);rootStatus=text("尚未验证 Root",14,MUTED,false);c.addView(rootStatus);action(c,"打开 KernelSU 授权 Root",false,()->openManager(KERNELSU));action(c,"检查 Root 权限",false,()->checkRoot(true));action(c,"查看权限授权说明",false,this::permissionGuide);
             heading("设备信息");c=card();row(c,"当前设备",Build.MODEL+" · Android "+Build.VERSION.RELEASE);String ver="未安装";try{ver=getPackageManager().getPackageInfo("com.xiaomi.market",0).versionName;}catch(Exception ignored){}row(c,"应用商店版本",ver);row(c,"模块作用域","仅小米应用商店 · 请在 Vector 中确认启用");
@@ -228,7 +246,7 @@ public final class MainActivity extends Activity {
             c=pageCard("系统工具");c=functionBlock(c);functionHeader(c,"快应用框架",null);description(c,"需要 KernelSU 授权；仅卸载主用户的组件，可恢复。","系统应用 → 快应用框架");quickStatus=text("当前状态：检查中",15,ACCENT,true);quickStatus.setPadding(0,0,0,dp(8));c.addView(quickStatus);refreshQuickStatus();action(c,"刷新状态",false,this::refreshQuickStatus);action(c,"查看命令与恢复方法",false,()->show(3));rootNotice=text("Root 未验证：请在首页检查。",13,ACCENT,true);rootNotice.setPadding(0,dp(8),0,dp(4));rootNotice.setOnClickListener(v->show(0));c.addView(rootNotice);rootActions=functionBlock(c);action(rootActions,"卸载快应用框架",false,()->quickAction(false));action(rootActions,"恢复快应用框架",false,()->quickAction(true));
             TextView hint=text("配置自动保存并刷新；部分内容需再次进入对应页面。",13,MUTED,false);hint.setPadding(dp(6),dp(8),dp(6),dp(8));content.addView(hint);
         }
-        if(page==2){LinearLayout c=card();hero(c,"商店轻享","MarketLite · "+appVersion());TextView intro=text("小米应用商店的界面自定义模块。",15,MUTED,false);intro.setPadding(0,dp(16),0,dp(4));c.addView(intro);row(c,"开发说明","由 ChatGPT 编写，与用户共同实机测试。不同应用商店版本可能仅支持部分功能。");heading("卸载与恢复");c=card();row(c,"可恢复的界面设置","停用 Vector 中的模块或卸载商店轻享，再强行停止并重新打开商店，可恢复原有显示。所有配置仅保存在本应用中；卸载后配置记录会清除。");row(c,"不会随卸载自动恢复","快应用框架的主用户卸载属于独立系统操作，卸载本应用不会重新安装框架。请先恢复快应用，或使用恢复命令。卸载本应用也不会取消手机 Root。");action(c,"查看快应用恢复说明",false,()->show(3));heading("开源信息");c=card();row(c,"开源许可","GPL-3.0-or-later · 免费");action(c,"查看许可证",false,()->openUrl("https://www.gnu.org/licenses/gpl-3.0.html"));heading("项目与致谢");c=card();row(c,"MarketLite","项目源码与恢复文档见 GitHub（未发布时请使用应用内说明）。");action(c,"打开 GitHub 项目",false,()->openUrl(PROJECT_URL));action(c,"查看参考项目",false,()->openUrl("https://github.com/callng/NewFuckMarketAds"));}
+        if(page==2){LinearLayout c=card();hero(c,"商店轻享","MarketLite · "+appVersion());TextView intro=text("小米应用商店的界面自定义模块。",15,MUTED,false);intro.setPadding(0,dp(16),0,dp(4));c.addView(intro);row(c,"开发说明","由 ChatGPT 编写，与用户共同实机测试。不同应用商店版本可能仅支持部分功能。");heading("卸载与恢复");c=card();row(c,"可恢复的界面设置","停用 Vector 中的模块或卸载商店轻享，再强行停止并重新打开商店，可恢复原有显示。所有配置仅保存在本应用中；卸载后配置记录会清除。");row(c,"不会随卸载自动恢复","快应用框架的主用户卸载属于独立系统操作，卸载本应用不会重新安装框架。请先恢复快应用，或使用恢复命令。卸载本应用也不会取消手机 Root。");action(c,"查看快应用恢复说明",false,()->show(3));heading("开源信息");c=card();row(c,"开源许可","GPL-3.0-or-later · 免费");action(c,"查看许可证",false,()->openUrl("https://www.gnu.org/licenses/gpl-3.0.html"));heading("项目与致谢");c=card();row(c,"MarketLite","项目源码、安装包及恢复文档已在 GitHub 免费公开。");action(c,"打开 GitHub 项目",false,()->openUrl(PROJECT_URL));action(c,"GitHub Releases",false,()->openUrl(GithubUpdates.RELEASES));action(c,"检查更新",false,this::checkUpdates);action(c,"查看参考项目",false,()->openUrl("https://github.com/callng/NewFuckMarketAds"));}
         if(page==3){LinearLayout c=card();row(c,"适用范围","仅对 Android 主用户 0 的系统预装快应用框架操作，包名 com.miui.hybrid；不删除系统分区。若本机没有该预装包，请勿强刷其他机型组件。");row(c,"卸载命令","点击卸载并确认后执行：");commandText(c,"su -c \""+RootCommands.Operation.UNINSTALL_QUICK.command+"\"");row(c,"恢复命令","点击恢复并确认后执行：");commandText(c,"su -c \""+RootCommands.Operation.RESTORE_QUICK.command+"\"");row(c,"本应用无法打开时","先停用 Vector 模块，再重新打开商店。若快应用框架此前已卸载，可通过已授权的 ADB 检查并恢复：");commandText(c,"adb shell pm list packages -u --user 0 com.miui.hybrid\nadb shell cmd package install-existing --user 0 com.miui.hybrid");row(c,"恢复注意事项","若 ADB 提示权限不足，请在已授权的 Root 终端执行上方恢复命令。恢复要求官方系统仍包含原始组件；命令失败时保留错误信息，不尝试刷写分区。恢复后刷新状态。卸载本应用不会自动恢复快应用框架。");action(c,"GitHub 恢复文档",false,()->openUrl(PROJECT_URL+"/blob/main/docs/quick-app-recovery.md"));action(c,"返回配置",true,()->show(1));}
         LinearLayout nav=new LinearLayout(this);nav.setGravity(Gravity.CENTER);nav.setPadding(dp(10),dp(8),dp(10),dp(8));nav.setBackgroundColor(Color.WHITE);String[] labels={"首页","配置","关于"};for(int i=0;i<3;i++){final int n=i;TextView v=text(labels[i],15,i==page?ACCENT:MUTED,i==page);v.setGravity(Gravity.CENTER);v.setPadding(0,dp(13),0,dp(13));if(i==page)v.setBackground(round(0xffd9efeb,22));v.setOnClickListener(w->show(n));nav.addView(v,new LinearLayout.LayoutParams(0,-2,1));}root.addView(nav);setContentView(root);refreshPermissions();
     }

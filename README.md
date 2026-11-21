@@ -6,9 +6,9 @@
 
 ## 下载
 
-[MarketLite 0.4.0-alpha（测试签名 APK）](https://github.com/w999w/MarketLite/raw/main/releases/MarketLite-0.4.0-alpha.apk)
+[GitHub Releases（下载安装包）](https://github.com/w999w/MarketLite/releases)
 
-SHA-256: `D5014CE960E0E45B1C00500E8C1BCDAB9D3F2F7D65EC518226157D4155C39EA1`
+0.4.1-alpha APK SHA-256: `DA3201B96E9713C89ECC579086A56DE59F730F364631F0F613BDF4F154CA1D01`
 
 - 使用 Vector/Xposed 兼容框架，建议作用域仅为 `com.xiaomi.market` 主进程。
 - 功能包括广告与推荐的展示调整、首页标签管理、底栏与个人页快捷入口；不修改安全检查、安装验证、下载请求或设备标识。
@@ -28,7 +28,7 @@ SHA-256: `D5014CE960E0E45B1C00500E8C1BCDAB9D3F2F7D65EC518226157D4155C39EA1`
 
 ## 使用与恢复
 
-安装后在 Vector 启用模块并使用模块建议范围，重新打开商店；应用首页提供权限检查与一键暂停界面修改。设置保存后自动同步，已经加载的数据可能需要重新进入对应页面。
+安装后在 Vector 启用模块并使用模块建议范围，重新打开商店；应用首页提供权限检查与 GitHub Releases 更新检查。设置保存后自动同步，已经加载的数据可能需要重新进入对应页面。下载新版本后由 Android 系统确认安装。
 
 停用模块或卸载本应用后，强行停止并重新打开商店，即可恢复原始界面；卸载本应用会清除本地配置。通过系统工具卸载的快应用框架不会随本应用卸载自动恢复，请参阅 [快应用命令与恢复](docs/quick-app-recovery.md)。
 

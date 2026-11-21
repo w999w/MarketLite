@@ -27,7 +27,6 @@ public final class ConfigProvider extends ContentProvider {
         return !key.equals("games")&&!key.equals("search_end")&&!key.equals("mine_security_compact");
     }
     static final String PREFS = "settings";
-    static final String PAUSED = "module_paused";
     static final String PERMISSIONS = "permission_status";
     static final String MARKET_SEEN = "market_seen_at";
     static final Uri FLAGS_URI=Uri.parse("content://io.github.marketlite.settings/flags");
@@ -39,14 +38,13 @@ public final class ConfigProvider extends ContentProvider {
             throw new SecurityException("Unknown caller");
         if("com.xiaomi.market".equals(caller))getContext().getSharedPreferences(PERMISSIONS,0).edit().putLong(MARKET_SEEN,System.currentTimeMillis()).apply();
         SharedPreferences prefs = getContext().getSharedPreferences(PREFS, 0);
-        // 暂停时向商店返回“全部关闭”，不删除用户保存的配置；旧模块也能识别。
-        boolean paused=prefs.getBoolean(PAUSED,false);
+        // 0.4.1 起移除暂停功能；旧版本遗留的暂停标志不再影响保存的配置。
         String[] columns=java.util.Arrays.copyOf(KEYS,KEYS.length+2);columns[KEYS.length]="home_start";columns[KEYS.length+1]="home_order";
         MatrixCursor cursor = new MatrixCursor(columns);
         Object[] row = new Object[KEYS.length+2];
-        for (int i=0; i<KEYS.length; i++) row[i] = !paused&&prefs.getBoolean(KEYS[i],defaultValue(KEYS[i])) ? 1 : 0;
-        row[KEYS.length]=paused?0:SettingsPolicy.normalizeStart(prefs.getInt("home_start",0));
-        row[KEYS.length+1]=paused?SettingsPolicy.DEFAULT_ORDER:SettingsPolicy.normalizeOrder(prefs.getString("home_order",SettingsPolicy.DEFAULT_ORDER));
+        for (int i=0; i<KEYS.length; i++) row[i] = prefs.getBoolean(KEYS[i],defaultValue(KEYS[i])) ? 1 : 0;
+        row[KEYS.length]=SettingsPolicy.normalizeStart(prefs.getInt("home_start",0));
+        row[KEYS.length+1]=SettingsPolicy.normalizeOrder(prefs.getString("home_order",SettingsPolicy.DEFAULT_ORDER));
         cursor.addRow(row);
         return cursor;
     }
