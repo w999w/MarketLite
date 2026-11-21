@@ -6,8 +6,8 @@ android {
         applicationId 'io.github.marketlite'
         minSdk 24
         targetSdk 35
-        versionCode 6
-        versionName '0.4.1-alpha'
+        versionCode 7
+        versionName '0.4.2-alpha'
     }
 }
 dependencies { compileOnly 'de.robv.android.xposed:api:82' }

@@ -205,7 +205,7 @@ public final class MainActivity extends Activity {
                     boolean newer=ReleaseVersion.valid(current)&&ReleaseVersion.compare(release.tag,current)>0;
                     String notes=release.notes.length()>2000?release.notes.substring(0,2000)+"…":release.notes;
                     android.app.AlertDialog.Builder dialog=new android.app.AlertDialog.Builder(this).setTitle(newer?"发现新版本":"当前无可用更新").setMessage("当前："+current+"\n发布："+release.tag+(newer&&!notes.isEmpty()?"\n\n"+notes:""));
-                    if(newer)dialog.setPositiveButton("下载 APK",(d,w)->openUrl(release.apk)).setNeutralButton("发布详情",(d,w)->openUrl(release.page));else dialog.setPositiveButton("查看 Releases",(d,w)->openUrl(GithubUpdates.RELEASES));
+                    if(newer){if(release.apk!=null)dialog.setPositiveButton("下载 APK",(d,w)->openUrl(release.apk)).setNeutralButton("发布详情",(d,w)->openUrl(release.page));else dialog.setPositiveButton("查看发布并下载",(d,w)->openUrl(release.page));}else dialog.setPositiveButton("查看 Releases",(d,w)->openUrl(GithubUpdates.RELEASES));
                     dialog.setNegativeButton("关闭",null).show();
                 });
             }catch(Exception e){runOnUiThread(()->{checkingUpdate=false;if(!isFinishing()&&!isDestroyed())AppErrors.show(this,"检查 GitHub 更新",e,e instanceof java.io.IOException&&e.getMessage()!=null&&e.getMessage().matches("GitHub HTTP \\d{3}")?e.getMessage():"请检查网络后重试，也可在关于页打开 Releases。");});}

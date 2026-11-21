@@ -8,7 +8,7 @@
 
 [GitHub Releases（下载安装包）](https://github.com/w999w/MarketLite/releases)
 
-0.4.1-alpha APK SHA-256: `DA3201B96E9713C89ECC579086A56DE59F730F364631F0F613BDF4F154CA1D01`
+0.4.2-alpha APK SHA-256: `0F778C764810AC4D7DE1BB98C0B7D68FA89363070E3B7D67FAA19954CB75E0DA`
 
 - 使用 Vector/Xposed 兼容框架，建议作用域仅为 `com.xiaomi.market` 主进程。
 - 功能包括广告与推荐的展示调整、首页标签管理、底栏与个人页快捷入口；不修改安全检查、安装验证、下载请求或设备标识。
