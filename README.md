@@ -8,7 +8,9 @@
 
 [GitHub Releases（下载安装包）](https://github.com/w999w/MarketLite/releases)
 
-1.0.0 APK SHA-256: `A53DC207B9B277E597DF1FF9D21F39189D4A532512FC7C47A606BD11677AF1D5`
+1.0.1 APK SHA-256: `D6093E04D5FB4679DDCF56EB6865CC8498A2E8C7D86D3FA6DF682FEF8D995CAB`
+
+1.0.1 起采用 `io.github.w999w.marketlite`，符合 Xposed 模块仓库的 GitHub 用户名前缀要求。旧包 `io.github.marketlite` 的配置不会自动迁移；请先在 Vector 停用旧模块、安装并启用新模块、重新设置配置，确认有效后再考虑卸载旧应用。不要同时启用两个版本。
 
 - 使用 Vector/Xposed 兼容框架，建议作用域仅为 `com.xiaomi.market` 主进程。
 - 功能包括广告与推荐的展示调整、首页标签管理、底栏与个人页快捷入口；不修改安全检查、安装验证、下载请求或设备标识。

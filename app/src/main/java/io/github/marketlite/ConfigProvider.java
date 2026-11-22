@@ -29,12 +29,12 @@ public final class ConfigProvider extends ContentProvider {
     static final String PREFS = "settings";
     static final String PERMISSIONS = "permission_status";
     static final String MARKET_SEEN = "market_seen_at";
-    static final Uri FLAGS_URI=Uri.parse("content://io.github.marketlite.settings/flags");
+    static final Uri FLAGS_URI=Uri.parse("content://io.github.w999w.marketlite.settings/flags");
     private final SharedPreferences.OnSharedPreferenceChangeListener changes=(prefs,key)->getContext().getContentResolver().notifyChange(FLAGS_URI,null);
     @Override public boolean onCreate() { getContext().getSharedPreferences(PREFS,0).registerOnSharedPreferenceChangeListener(changes);return true; }
     @Override public Cursor query(Uri uri, String[] p, String s, String[] a, String order) {
         String caller=getCallingPackage();
-        if (!"com.xiaomi.market".equals(caller) && !"io.github.marketlite".equals(caller))
+        if (!"com.xiaomi.market".equals(caller) && !getContext().getPackageName().equals(caller))
             throw new SecurityException("Unknown caller");
         if("com.xiaomi.market".equals(caller))getContext().getSharedPreferences(PERMISSIONS,0).edit().putLong(MARKET_SEEN,System.currentTimeMillis()).apply();
         SharedPreferences prefs = getContext().getSharedPreferences(PREFS, 0);

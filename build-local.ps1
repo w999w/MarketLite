@@ -18,14 +18,14 @@ Invoke-Checked (Join-Path $java 'javac.exe') (@('--release','8','-encoding','UTF
 Invoke-Checked (Join-Path $java 'jar.exe') @('cf',"$work\code.jar",'-C',"$work\classes",'.')
 Invoke-Checked (Join-Path $java 'java.exe') @('-cp',"$tools\lib\d8.jar",'com.android.tools.r8.D8','--min-api','24','--lib',$sdk,'--classpath',$api,'--output',"$work\dex", "$work\code.jar")
 Invoke-Checked (Join-Path $tools 'aapt2.exe') @('compile','--dir',"$src\res",'-o',"$work\resources.zip")
-Invoke-Checked (Join-Path $tools 'aapt2.exe') @('link','-o',"$work\unsigned.apk",'-I',$sdk,'--manifest',"$src\AndroidManifest.xml",'-A',"$src\assets",'--min-sdk-version','24','--target-sdk-version','35','--version-code','8','--version-name','1.0.0',"$work\resources.zip")
+Invoke-Checked (Join-Path $tools 'aapt2.exe') @('link','-o',"$work\unsigned.apk",'-I',$sdk,'--manifest',"$src\AndroidManifest.xml",'-A',"$src\assets",'--rename-manifest-package','io.github.w999w.marketlite','--min-sdk-version','24','--target-sdk-version','35','--version-code','9','--version-name','1.0.1',"$work\resources.zip")
 Invoke-Checked (Join-Path $java 'jar.exe') @('uf',"$work\unsigned.apk",'-C',"$work\dex",'classes.dex')
 Invoke-Checked (Join-Path $tools 'zipalign.exe') @('-f','4',"$work\unsigned.apk", "$work\aligned.apk")
 $key = Join-Path $cache 'test-signing.jks'
 if (-not (Test-Path -LiteralPath $key)) {
     Invoke-Checked (Join-Path $java 'keytool.exe') @('-genkeypair','-keystore',$key,'-storepass','android','-keypass','android','-alias','marketlite-test','-dname','CN=MarketLite Test','-keyalg','RSA','-keysize','2048','-validity','3650','-storetype','JKS')
 }
-$apk = Join-Path $out 'MarketLite-1.0.0.apk'
+$apk = Join-Path $out 'MarketLite-1.0.1.apk'
 Invoke-Checked (Join-Path $java 'java.exe') @('-jar',"$tools\lib\apksigner.jar",'sign','--ks',$key,'--ks-pass','pass:android','--key-pass','pass:android','--ks-key-alias','marketlite-test','--out',$apk,"$work\aligned.apk")
 Invoke-Checked (Join-Path $java 'java.exe') @('-jar',"$tools\lib\apksigner.jar",'verify','--verbose',$apk)
 Get-FileHash -Algorithm SHA256 -LiteralPath $apk

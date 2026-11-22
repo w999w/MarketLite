@@ -2,10 +2,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <queries><package android:name="com.xiaomi.market" /><package android:name="com.miui.hybrid" /><package android:name="org.matrix.vector.manager" /><package android:name="me.weishu.kernelsu" /></queries>
     <application android:label="商店轻享" android:icon="@drawable/ic_launcher" android:allowBackup="false" android:theme="@android:style/Theme.Material.Light.NoActionBar">
-        <activity android:name=".MainActivity" android:exported="true">
+        <activity android:name="io.github.marketlite.MainActivity" android:exported="true">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <provider android:name=".ConfigProvider" android:authorities="io.github.marketlite.settings" android:exported="true" />
+        <provider android:name="io.github.marketlite.ConfigProvider" android:authorities="io.github.w999w.marketlite.settings" android:exported="true" />
         <meta-data android:name="xposedmodule" android:value="true" />
         <meta-data android:name="xposeddescription" android:value="Market advertisement presentation controls" />
         <meta-data android:name="xposedminversion" android:value="82" />
